@@ -8,6 +8,7 @@
 - [ ] Structure
 - [ ] Closures
 - [ ] Memory management
+- [ ] Auto GC
 
 ### OS Supported
 
