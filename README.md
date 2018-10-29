@@ -1,5 +1,5 @@
 # milo
-Milö - C library for Lua.
+**Milö - C library for Lua.**
 
 ### Features
 - Call C shared function
