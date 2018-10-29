@@ -25,8 +25,8 @@ user32 = milo.load('user32')
 MsgBox = user32.MessageBoxA:def(types.int, {types.ptr, types.str, types.str, types.uint}, true)
 
 -- MessageBox constant
-MB_OK, MB_ICONINFORMATION, MB_YESNO = 0x0000, 0x0040, 0x0004
-IDYES = 6
+local MB_OK, MB_ICONINFORMATION, MB_YESNO, IDYES
+    = 0x0000, 0x0040, 0x0004, 6
 
 -- call & set return
 ret = MsgBox(nil, 'Hello, world!', 'MsgBox', MB_OK + MB_ICONINFORMATION + MB_YESNO)
