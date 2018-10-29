@@ -14,7 +14,8 @@
 - [x] Windows
 - [ ] Linux
 
-### 
+### Example: MsgBox
+
 ```lua
 milo = require('milo')
 types = milo.types -- C types
@@ -37,5 +38,18 @@ if (ret == IDYES) then
 else
     print('No!')
 end
-
 ```
+
+### Types
+
+`milo.types.`| description
+:---:|:---
+`u8`, `u16`,<br>`u32` (`uint32`),<br>`u64` (`uint64`)| unsigned integer
+`i8`, `i16`,<br>`i32` (`int32`),<br>`i64` (`int64`)| signed integer
+`ptr`| pointer
+`f32`, `f64` (`num`)| floating number
+`str`, `wstr`| string, unicode string
+
+
+
+
