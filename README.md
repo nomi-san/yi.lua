@@ -2,11 +2,12 @@
 **Milö - C library for Lua.**
 
 ### Features
-- Call C shared function
-- Structure
-- Closures
-- Memory management
-- Multiple types
+
+- [x] Multiple types
+- [x] Calling C shared function
+- [ ] Structure
+- [ ] Closures
+- [ ] Memory management
 
 ### OS Supported
 
