@@ -1,5 +1,9 @@
-# milo
-**Milö - C library for Lua.**
+<p>
+    <p align="center">
+        <img src="https://i.imgur.com/ilAiPVd.png">
+    </p>
+    <h1  align="center">C library for Lua</h1>
+</p>
 
 ### Features
 
@@ -36,8 +40,8 @@ Point {20, 55}
 print('address: '   .. tostring( -Point ))
 print('lenght: '    .. tostring( #Point ))
 print('sizeof: '    .. tostring( Point[0] ))
-print('value: x = ' .. tostring( Point[1]) --> Point:get(1)
-        .. ', y = ' .. tostring( Point[2]) --> Point:get(2)
+print('value: x = ' .. tostring( Point[1] ) --> Point:get(1)
+        .. ', y = ' .. tostring( Point[2] ) --> Point:get(2)
 )
 ```
 
