@@ -15,7 +15,26 @@
 - [x] Windows
 - [ ] Linux
 
-### Example: MsgBox
+## Example 
+
+### Struct
+
+```lua
+milo = require('milo')
+struct = milo.struct
+types = milo.types
+
+Point = struct {
+    types.int,
+    types.int
+}
+
+Point {20, 55} --> Point.set(1, 20)
+
+print('Point -> x: ' .. Point.get(1) .. ', y: ' .. Point.get(2))
+```
+
+### MsgBox
 
 ```lua
 milo = require('milo')
