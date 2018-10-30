@@ -30,10 +30,11 @@ Point = struct {
 }
 
 Point {20, 55} 
---> Point:set(1, 20)
---> Point:set(2, 55)
+--> Point[1] = 20 --> Point:set(1, 20)
+--> Point[2] = 55 --> Point:set(2, 55)
 
-print('Point -> x: ' .. Point:get(1) .. ', y: ' .. Point:get(2))
+print('Point -> x: ' .. Point[1] .. ', y: ' .. Point[2])
+                    --> Point:get(1)      -->  Point:get(2)
 ```
 
 ### MsgBox
