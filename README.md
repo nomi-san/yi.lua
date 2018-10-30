@@ -1,6 +1,6 @@
 <p>
     <p align="center">
-        <img src="https://i.imgur.com/ilAiPVd.png">
+        <img src="https://i.imgur.com/ilAiPVd.png" width="250">
     </p>
     <h1  align="center">C library for Lua</h1>
 </p>
@@ -9,7 +9,7 @@
 
 - [x] Multiple types
 - [x] Calling C shared function
-- [ ] Structure
+- [x] Structure
 - [ ] Closures
 - [ ] Memory management
 - [ ] Auto GC
