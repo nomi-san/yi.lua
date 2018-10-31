@@ -21,7 +21,7 @@
 - [ ] Linux
 
 ### Bugs
-- `double` cannot cast to `void*` or another `4bytes-type` :))
+- `double` cannot cast to `void*` (x86 arch) or another `4bytes-type` :))
 
 ```
 
