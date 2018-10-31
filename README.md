@@ -6,9 +6,10 @@
 </p>
 
 ### Features
-- [x] Multiple types
+- [x] Multiple static types
 - [x] Calling C shared function
 - [x] Structure
+- [ ] Classes
 - [ ] Closures
 - [ ] Memory management
 - [ ] Auto GC
