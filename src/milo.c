@@ -546,17 +546,37 @@ void milo_lib_reg(lua_State *L)
 	lua_pop(L, 1);
 }
 
+long milo_loword(long x)
+{
+	return x & 0xffff;
+}
 
+long milo_hiword(long x)
+{
+	return x >> 0x10;
+}
 
+long milo_mkparam(long l, long h)
+{
+	return milo_loword(l) | (0x10000 * milo_loword(h));
+}
 
+int milo_ct(lua_State *L)
+{
+	lua_Integer p = milo_mkparam(
+		lua_tointeger(L, 1),
+		lua_tointeger(L, 2)
+	);
+	lua_pushinteger(L, p);
+	return 1;
+}
 
-
-
-
-
-
-
-
+int milo_sleep(lua_State *L)
+{
+	if (!lua_isinteger(L, 1)) return 0;
+	_sleep(lua_tointeger(L, 1));
+	return 0;
+}
 
 __declspec(dllexport)
 int luaopen_milo(lua_State *L)
@@ -566,8 +586,18 @@ int luaopen_milo(lua_State *L)
 
 	lua_newtable(L);
 
+	milo_struct_reg(L);
+
 	lua_pushcfunction(L, milo_load);
 	lua_setfield(L, -2, "load");
+
+	lua_pushcfunction(L, milo_sleep);
+	lua_setfield(L, -2, "sleep");
+	
+	lua_pushcfunction(L, milo_ct);
+	lua_setfield(L, -2, "ct");
+
+	int milo_test(lua_State *L);
 
 	lua_createtable(L, 0, 0);
 

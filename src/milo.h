@@ -14,6 +14,8 @@ extern "C" {
 #include "lapi.h"
 #include "lauxlib.h"
 
+#pragma warning(disable : 4996)
+
 void* milo_newudata(lua_State* L, size_t sz);
 void milo_pushudata(lua_State *L, void *udata, const char *name);
 void* milo_getudata(lua_State *L, int idx);
@@ -25,6 +27,12 @@ int milo_free(lua_State *L);
 
 wchar_t *str_to_wstr(const char* str);
 void lua_pushwstring(lua_State *L, wchar_t *wstr);
+
+long milo_loword(long x);
+long milo_hiword(long x);
+long milo_mkparam(long l, long h);
+
+#define MILO_TS_LEN 50
 
 #ifdef __cplusplus
 }

@@ -1,6 +1,7 @@
 #ifndef MILO_TYPES_H
 #define MILO_TYPES_H
 #pragma once
+#include <stdlib.h>
 
 typedef unsigned char		c_u8_t,		c_bool_t;
 typedef unsigned short		c_u16_t;
@@ -12,10 +13,10 @@ typedef signed short		c_i16_t;
 typedef signed int			c_i32_t,	c_int_t;
 typedef signed long long	c_i64_t,	c_int64_t;
 
+typedef unsigned short		c_wchar_t;
 typedef char				c_char_t;
-typedef wchar_t				c_wchar_t;
 typedef char*				c_str_t;
-typedef wchar_t*			c_wstr_t;
+typedef unsigned short*		c_wstr_t;
 
 typedef float				c_f32_t;
 typedef double				c_f64_t,	c_num_t;
@@ -37,7 +38,7 @@ typedef enum {
 typedef void* (*milo_fn_t)();
 typedef void* (__stdcall* milo_fn_std_t)();
 
-typedef struct {
+typedef struct milo_value_t {
 	milo_type_t	t;
 	void* val;
 } milo_value_t;
@@ -58,5 +59,32 @@ typedef struct {
 
 static const char* __milo_lib__ = "lib";
 static const char* __milo_func__ = "func";
+
+static const char
+	*c_u8_n 	= "u8", 
+	*c_u16_n 	= "u16",
+	*c_u32_n 	= "u32",
+	*c_u64_n 	= "u64",
+	*c_i8_n 	= "i8",
+	*c_i16_n 	= "i16",
+	*c_i32_n 	= "i32",
+	*c_i64_n 	= "i64",
+	*c_f32_n 	= "f32",
+	*c_f64_n 	= "f64",
+	*c_bool_n 	= "bool",
+	*c_char_n 	= "char",
+	*c_wchar_n 	= "wchar",
+	*c_int_n 	= "int",
+	*c_int64_n 	= "int64",
+	*c_uint_n 	= "uint",
+	*c_uint64_n = "uint64",
+	*c_num_n 	= "num",
+	*c_str_n 	= "str",
+	*c_wstr_n 	= "wstr",
+	*c_none_n 	= "none",
+	*c_ptr_n 	= "ptr";
+
+const char* milo_type_tostring(milo_type_t type);
+size_t milo_type_tosize(milo_type_t type);
 
 #endif
