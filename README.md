@@ -9,8 +9,8 @@
 - [x] Multiple static types
 - [x] Calling C shared function
 - [x] Structure
+- [x] Closures
 - [ ] Classes
-- [ ] Closures
 - [ ] Memory management
 - [ ] Auto GC
 
@@ -81,20 +81,22 @@ print('MyBool is: ' .. tostring(MyBool.value))
                             --> MyBool[1]
 ```
 
-### ~~Closure~~
+### Closure
 
 ```lua
 milo = require('milo')
-types = milo.types
+t = milo.types
 
 function add(a, b)
     return a + b
 end
 
-add_c = milo.closure(add, types.int, {types.int, type.int})
+-- define closure   func | type | arguments
+add_c = milo.closure(add, t.int, {t.int, t.int})
 
-ret = add_c(4, 8)
+ret = add_c(4, 8) -- call, like Lua pure
 print(ret)
+print(-add_c) --> closure function address pointer, use for C closure/callback
 ```
 
 ### Types
