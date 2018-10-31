@@ -587,6 +587,7 @@ int luaopen_milo(lua_State *L)
 	lua_newtable(L);
 
 	milo_struct_reg(L);
+	milo_closure_reg(L);
 
 	lua_pushcfunction(L, milo_load);
 	lua_setfield(L, -2, "load");

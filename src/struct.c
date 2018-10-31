@@ -1,5 +1,4 @@
-#include "milo.h"
-#include "types.h"
+#include "struct.h"
 
 void milo_struct_setvalue(lua_State *L, void *val, milo_type_t type, int idx)
 {
@@ -80,25 +79,6 @@ void *milo_struct_getelement(void* addr, size_t offset)
 {
 	return (void*)((size_t)addr + offset);
 }
-
-typedef struct {
-	size_t		size;
-	size_t		offset;
-	milo_type_t type;
-	//char*		name;
-} milo_struct_element_t;
-
-typedef struct {
-	size_t		size;
-	size_t		len;
-	//char*		name;
-	void*		addr;
-	milo_struct_element_t* 
-				els;
-	int			ref;
-} milo_struct_t;
-
-const char* __milo_struct__ = "struct";
 
 /*
 	struct = milo.struct {
