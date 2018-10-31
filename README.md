@@ -20,6 +20,18 @@
 - [x] Windows
 - [ ] Linux
 
+### Bugs
+- `double` cannot cast to `void*` or another `type-4bytes` :))
+
+```
+
+double value = 4578.1415
+<-----------------------------64bits----------------------------->
+|======================53bits=======================/============|
+                       4578                         |    1415
+
+```
+
 ## Example 
 
 ### MsgBox
