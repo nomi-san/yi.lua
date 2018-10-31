@@ -45,28 +45,39 @@ else
 end
 ```
 
-### ~~Struct~~
+### Struct
 
 ```lua
 milo = require('milo')
 struct = milo.struct
-types = milo.types
+t = milo.types
 
 Point = struct {
-    types.int,
-    types.int
+    t.int,
+    t.int
 }
 
 Point {20, 55} 
---> Point[1] = 20 // or Point:set(1, 20)
---> Point[2] = 55 // or Point:set(2, 55)
+--> Point[1] = 20
+--> Point[2] = 55
 
 print('address: '   .. tostring( -Point ))
 print('lenght: '    .. tostring( #Point ))
 print('sizeof: '    .. tostring( Point[0] ))
-print('value: x = ' .. tostring( Point[1] ) --> Point:get(1)
-        .. ', y = ' .. tostring( Point[2] ) --> Point:get(2)
+print('value: x = ' .. tostring( Point[1] )
+        .. ', y = ' .. tostring( Point[2] )
 )
+
+-- sugar syntax
+
+MyBool = struct {
+    'value', t.bool;
+}
+
+MyBool.value = false --> MyBool[1] = false
+
+print('MyBool is: ' .. tostring(MyBool.value))
+                            --> MyBool[1]
 ```
 
 ### ~~Closure~~
