@@ -34,7 +34,7 @@ MsgBox = user32.MessageBoxA:def(types.int, {types.ptr, types.str, types.str, typ
 
 -- MessageBox constant
 local MB_OK,  MB_ICONINFORMATION, MB_YESNO, IDYES
-    = 0x0000, 0x0040,             0x0004,    6
+    = 0x0000, 0x0040,             0x0004,   6
 
 -- call & set return
 ret = MsgBox(nil, 'Hello, world!', 'MsgBox', MB_OK + MB_ICONINFORMATION + MB_YESNO)
@@ -54,8 +54,8 @@ struct = milo.struct
 t = milo.types
 
 Point = struct {
-    t.int,
-    t.int
+    t.int, --> index 1
+    t.int  --> index 2
 }
 
 Point {20, 55} 
