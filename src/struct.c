@@ -145,6 +145,7 @@ int milo_struct(lua_State *L)
 	}
 	else if (lua_isstring(L, -1)) {
 		lua_pop(L, 1);
+		if (len % 2 != 0) return 0;
 
 		milo_struct_t* st = alloc_t(milo_struct_t);
 		lua_pushvalue(L, 1);
