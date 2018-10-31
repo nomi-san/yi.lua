@@ -3,6 +3,8 @@
         <img src="https://i.imgur.com/ilAiPVd.png" width="250">
     </p>
     <h1  align="center">C library for Lua</h1>
+    <h3 align="center">LibFFI is awesome, but I like a new for myself.</h3>
+    <br>
 </p>
 
 ### Features
