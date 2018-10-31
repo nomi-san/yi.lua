@@ -241,8 +241,15 @@ int milo_struct_newindex(lua_State *L)
 
 	else if (lua_isstring(L, 2)) {
 		const char* idx = lua_tostring(L, 2);
+		lua_rawgeti(L, LUA_REGISTRYINDEX, st->ref);
+		if (!lua_getfield(L, -1, idx)) return 0;
+		int i = lua_tointeger(L, -1);
 
-		return 1;
+		void* val = milo_struct_getelement(
+			st->addr,
+			st->els[i].offset
+		);
+		milo_struct_setvalue(L, val, st->els[i].type, 3);
 	}
 
 	return 0;
