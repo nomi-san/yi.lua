@@ -6,7 +6,6 @@
 </p>
 
 ### Features
-
 - [x] Multiple types
 - [x] Calling C shared function
 - [x] Structure
@@ -15,35 +14,10 @@
 - [ ] Auto GC
 
 ### OS Supported
-
 - [x] Windows
 - [ ] Linux
 
 ## Example 
-
-### Struct
-
-```lua
-milo = require('milo')
-struct = milo.struct
-types = milo.types
-
-Point = struct {
-    types.int,
-    types.int
-}
-
-Point {20, 55} 
---> Point[1] = 20 // or Point:set(1, 20)
---> Point[2] = 55 // or Point:set(2, 55)
-
-print('address: '   .. tostring( -Point ))
-print('lenght: '    .. tostring( #Point ))
-print('sizeof: '    .. tostring( Point[0] ))
-print('value: x = ' .. tostring( Point[1] ) --> Point:get(1)
-        .. ', y = ' .. tostring( Point[2] ) --> Point:get(2)
-)
-```
 
 ### MsgBox
 
@@ -69,6 +43,46 @@ if (ret == IDYES) then
 else
     print('No!')
 end
+```
+
+### ~~Struct~~
+
+```lua
+milo = require('milo')
+struct = milo.struct
+types = milo.types
+
+Point = struct {
+    types.int,
+    types.int
+}
+
+Point {20, 55} 
+--> Point[1] = 20 // or Point:set(1, 20)
+--> Point[2] = 55 // or Point:set(2, 55)
+
+print('address: '   .. tostring( -Point ))
+print('lenght: '    .. tostring( #Point ))
+print('sizeof: '    .. tostring( Point[0] ))
+print('value: x = ' .. tostring( Point[1] ) --> Point:get(1)
+        .. ', y = ' .. tostring( Point[2] ) --> Point:get(2)
+)
+```
+
+### ~~Closure~~
+
+```lua
+milo = require('milo')
+types = milo.types
+
+function add(a, b)
+    return a + b
+end
+
+add_c = milo.closure(add, types.int, {types.int, type.int})
+
+ret = add_c(4, 8)
+print(ret)
 ```
 
 ### Types
