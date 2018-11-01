@@ -19,30 +19,29 @@ typedef struct {
 				args;
 } milo_closure_t;
 
-def_clofn(void*, milo_closure_proxy, size_t, data, (void* args),
+def_clofn(void*, milo_closure_proxy, size_t, data, (void *args[]),
 {
-	if (!data) return NULL;
-	milo_closure_t* cl = data;
+	milo_closure_t* cl = (milo_closure_t*)data;
 	lua_State* L = cl->L;
-	
+
 	lua_rawgeti(L, LUA_REGISTRYINDEX, cl->ref);
 	if (!lua_isfunction(L, -1))
 		return NULL;
 
 	for (int i = 0; i < cl->nargs; i++) {
-		void* val = milo_struct_getelement(args, cl->args[i].offset);
+		void* val = (void*)((char*)&args + cl->args[i].offset);
 		milo_struct_pushvalue(L, val, cl->args[i].type);
 	}
-	
+
 	if (cl->type != c_none) {
-		lua_pcall(L, cl->nargs, 1, 0);
+		lua_call(L, cl->nargs, 1);
 		lua_pushvalue(L, -1);
 		milo_struct_setvalue(L, &cl->ret, cl->type, -1);
 
 		return cl->ret;
 	}
 
-	lua_pcall(L, cl->nargs, 0, 0);
+	lua_call(L, cl->nargs, 0);
 	return NULL;
 })
 
@@ -93,11 +92,11 @@ int milo_closure_call(lua_State *L)
 		lua_pushvalue(L, i + 2);
 
 	if (cl->type != c_none) {
-		lua_pcall(L, cl->nargs, 1, 0);
+		lua_call(L, cl->nargs, 1);
 		lua_pushvalue(L, -1);
 	}
 	else {
-		lua_pcall(L, cl->nargs, 0, 0);
+		lua_call(L, cl->nargs, 0);
 		lua_pushnil(L);
 	}
 

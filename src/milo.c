@@ -1,5 +1,6 @@
 #include "milo.h"
 #include "types.h"
+#include "struct.h"
 
 void* milo_newudata(lua_State* L, size_t sz)
 {
@@ -45,161 +46,6 @@ int milo_free(lua_State *L)
 	return 1;
 }
 
-void milo_cast(lua_State *L, int idx, milo_value_t *val)
-{
-	switch (val->t)
-	{
-		case c_bool:
-			*(c_bool_t*)&val->val = lua_toboolean(L, idx);
-			break;
-
-		case c_u8:
-			*(c_u8_t*)&val->val = lua_tointeger(L, idx);
-			break;
-
-		case c_u16:
-			*(c_u16_t*)&val->val = lua_tointeger(L, idx);
-			break;
-
-		case c_u32:
-		case c_uint:
-			*(c_u32_t*)&val->val = lua_tointeger(L, idx);
-			break;
-
-		case c_u64:
-		case c_uint64:
-			*(c_u64_t*)&val->val = lua_tointeger(L, idx);
-			break;
-
-		case c_i8:
-			*(c_i8_t*)&val->val = lua_tointeger(L, idx);
-			break;
-
-		case c_i16:
-			*(c_i16_t*)&val->val = lua_tointeger(L, idx);
-			break;
-
-		case c_i32:
-		case c_int:
-			*(c_i32_t*)&val->val = lua_tointeger(L, idx);
-			break;
-
-		case c_i64:
-		case c_int64:
-			*(c_i64_t*)&val->val = lua_tointeger(L, idx);
-			break;
-
-		case c_f32:
-			*(c_f32_t*)&val->val = lua_tonumber(L, idx);
-			break;
-
-		case c_f64:
-		case c_num:
-			*(c_f64_t*)&val->val = lua_tonumber(L, idx);
-			break;
-
-		case c_str:
-			*(c_str_t*)&val->val = _strdup(lua_tostring(L, idx));
-			break;
-
-		case c_wstr:
-			*(c_wstr_t*)&val->val = str_to_wstr(lua_tostring(L, idx));
-			break;
-
-		case c_ptr:
-			*(c_ptr_t*)&val->val = lua_touserdata(L, idx);
-			break;
-
-		case c_none:
-			*(c_ptr_t*)&val->val = NULL;
-			break;
-
-		//case c_char:
-		//	break;
-		//case c_wchar:
-		//	break;
-	}
-}
-
-int milo_return(lua_State *L, milo_value_t *val)
-{
-	switch (val->t)
-	{
-		case c_bool:
-			lua_pushboolean(L, *(c_bool_t*)&val->val);
-			break;
-
-		case c_u8:
-			lua_pushinteger(L, *(c_u8_t*)&val->val);
-			break;
-
-		case c_u16:
-			lua_pushinteger(L,  *(c_u16_t*)&val->val);
-			break;
-
-		case c_u32:
-		case c_uint:
-			lua_pushinteger(L, *(c_u32_t*)&val->val);
-			break;
-
-		case c_u64:
-		case c_uint64:
-			lua_pushinteger(L, *(c_u64_t*)&val->val);
-			break;
-
-		case c_i8:
-			lua_pushinteger(L, *(c_i8_t*)&val->val);
-			break;
-
-		case c_i16:
-			lua_pushinteger(L, *(c_i16_t*)&val->val);
-			break;
-
-		case c_i32:
-		case c_int:
-			lua_pushinteger(L, *(c_i32_t*)&val->val);
-			break;
-
-		case c_i64:
-		case c_int64:
-			lua_pushinteger(L, *(c_i64_t*)&val->val);
-			break;
-
-		case c_f32:
-			lua_pushnumber(L, *(c_f32_t*)&val->val);
-			break;
-
-		case c_f64:
-		case c_num:
-			lua_pushnumber(L, *(c_f64_t*)&val->val);
-			break;
-
-		case c_str:
-			lua_pushstring(L, *(c_str_t*)&val->val);
-			break;
-
-		case c_wstr:
-			lua_pushwstring(L, *(c_wstr_t*)&val->val);
-			break;
-
-		case c_ptr:
-			lua_pushlightuserdata(L, *(c_ptr_t*)&val->val);
-			break;
-
-		case c_none:
-			lua_pushnil(L);
-			break;
-
-		//case c_char:
-		//	break;
-		//case c_wchar:
-		//	break;
-		default: return 0;
-	}
-
-	return 1;
-}
-
 /* metatable: func
 --------------------------------------------------*/
 
@@ -228,13 +74,16 @@ int milo_func_def(lua_State *L)
 int milo_func_call(lua_State *L)
 {
 	milo_func_t* fn = milo_getudata(L, 1);
+	if (!fn) return 0;
 
-	if ((lua_gettop(L)) < 1) return 0;
-	if (fn->n != (lua_gettop(L) - 1))
+	int top = lua_gettop(L);
+
+	if (top < 1) return 0;
+	if (fn->n != (top - 1))
 		return 0;
 	else
 		for (int i = 0; i < fn->n; i++)
-			milo_cast(L, i+2, &fn->args[i]);
+			milo_struct_setvalue(L, &fn->args[i].val, fn->args[i].t, i+2);
 
 	switch (fn->n) {
 		case 0: {
@@ -450,7 +299,7 @@ int milo_func_call(lua_State *L)
 		}
 	}
 
-	return milo_return(L, &fn->ret);
+	return milo_struct_pushvalue(L, &fn->ret.val, fn->ret.t);
 }
 
 int milo_func_index(lua_State *L)

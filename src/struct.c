@@ -26,7 +26,7 @@ void milo_struct_setvalue(lua_State *L, void *val, milo_type_t type, int idx)
 		case c_f64: 	*(c_f64_t*)val = lua_tonumber(L, idx);		break;
 		case c_num: 	*(c_num_t*)val = lua_tonumber(L, idx);		break;
 	
-		case c_str: 	*(c_str_t*)val = (char*)lua_tostring(L, idx);	break;
+		case c_str: 	*(c_str_t*)val = _strdup(lua_tostring(L, idx));	break;
 		case c_wstr: 	*(c_wstr_t*)val = 
 								str_to_wstr(lua_tostring(L, idx));	break;
 		case c_ptr:		*(c_ptr_t*)val = lua_touserdata(L, idx);	break;
@@ -77,7 +77,8 @@ int milo_struct_pushvalue(lua_State *L, void *val, milo_type_t type)
 
 void *milo_struct_getelement(void* addr, size_t offset)
 {
-	return (void*)((size_t)addr + offset);
+	void* p = (void*)((char*)addr + offset);
+	return p;
 }
 
 /*
@@ -175,18 +176,24 @@ int milo_struct_index(lua_State *L)
 	if (lua_isinteger(L, 2)) {
 		int idx = lua_tointeger(L, 2);
 
-		if (idx == 0){
-			lua_pushinteger(L, st->size);
-			return 1;
-		}
-		else {
-			if (idx > st->len) return 0;
+		switch (idx) {
+			case -1: {
+				lua_pushlightuserdata(L, st->addr);
+				return 1;
+			}
+			case 0 :{
+				lua_pushinteger(L, st->size);
+				return 1;
+			}
+			default: {
+				if (idx > st->len) return 0;
 
-			void* val = milo_struct_getelement(
-				st->addr,
-				st->els[idx - 1].offset
-			);
-			return milo_struct_pushvalue(L, val, st->els[idx - 1].type);
+				void* val = milo_struct_getelement(
+					st->addr,
+					st->els[idx - 1].offset
+				);
+				return milo_struct_pushvalue(L, val, st->els[idx - 1].type);
+			}
 		}
 	}
 	
@@ -211,7 +218,17 @@ int milo_struct_newindex(lua_State *L)
 	milo_struct_t* st = milo_getudata(L, 1);
 
 	if (lua_isinteger(L, 2)) {
+
 		int idx = lua_tointeger(L, 2);
+
+		if (idx == -1) {
+			if (lua_isinteger(L, 3)) {
+				lua_pushlightuserdata(L, (void*)lua_tointeger(L, 3));
+				st->addr = lua_touserdata(L, -1);
+			}
+			else st->addr = lua_touserdata(L, 3);
+			return 0;
+		}
 
 		void* val = milo_struct_getelement(
 			st->addr,
@@ -297,7 +314,7 @@ int milo_struct_tostring(lua_State *L)
 	if (!st) return 0;
 
 	char buf[MILO_TS_LEN];
-	sprintf_s(buf, MILO_TS_LEN, "%s: %08x", __milo_struct__, (unsigned int)st->addr);
+	snprintf(buf, MILO_TS_LEN, "%s: %08x", __milo_struct__, (unsigned int)st->addr);
 	lua_pushstring(L, buf);
 
 	return 1;

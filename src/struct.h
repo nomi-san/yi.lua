@@ -1,6 +1,7 @@
 #ifndef MILO_STRUCT_H
 #define MILO_STRUCT_H
 #pragma once
+#include <stdio.h>
 #include "milo.h"
 #include "types.h"
 
