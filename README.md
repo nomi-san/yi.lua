@@ -41,7 +41,7 @@ double value = 4578.1415;
 
 <img src="https://i.imgur.com/zb2ogcQ.png">
 
-- My way for closure proxy:
+- My way for closure proxy (unsafe):
 
 ```c
 void* __proxy__(void* args) {
@@ -50,7 +50,7 @@ void* __proxy__(void* args) {
 }
 
 // instead of
-void* proxy__(void* param1, void* param_2, ...) {
+void* __proxy__(void* param1, void* param_2, ...) {
     //
 }
 ```
