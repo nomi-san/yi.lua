@@ -35,6 +35,19 @@ double value = 4578.1415;
 <----------- 32bits ------------->
 ```
 
+- When build with MSVC, please disable **SDL Check** (or arg **/sld-**); if not closure argument being crash after first.
+
+<img src="https://i.imgur.com/zb2ogcQ.png">
+
+```c
+void* proxy__(void* args)
+{
+    // param[1] = args + 0
+    // param[2] = args + sizeof(param[1])
+    // param[n] = args + sizeof(param[n-1])
+}
+```
+
 ## Example 
 
 ### MsgBox
