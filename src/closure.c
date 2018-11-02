@@ -4,21 +4,25 @@
 static const char* __milo_closure__ = "closure";
 
 typedef struct {
-	milo_type_t type;
-	size_t offset;
-} milo_closure_arg_t;
-
-typedef struct {
 	void*		addr;
 	int			ref;
 	lua_State *	L;
 	milo_type_t type;
 	void*		ret;
 	size_t		nargs;
-	milo_closure_arg_t* 
-				args;
+	milo_arg_t* args;
 } milo_closure_t;
 
+/*
+	// my closure proxy //
+
+	call(a, b, ...)
+
+	=> proxy(args[])
+		|-> &args + 0 => a
+		|-> &args + sizeof(a) => b
+		|...
+*/
 def_clofn(void*, milo_closure_proxy, size_t, data, (void *args[]),
 {
 	milo_closure_t* cl = (milo_closure_t*)data;
@@ -29,7 +33,7 @@ def_clofn(void*, milo_closure_proxy, size_t, data, (void *args[]),
 		return NULL;
 
 	for (int i = 0; i < cl->nargs; i++) {
-		void* val = (void*)((char*)&args + cl->args[i].offset);
+		void* val = milo_struct_getelement(&args, cl->args[i].offset);
 		milo_struct_pushvalue(L, val, cl->args[i].type);
 	}
 
@@ -45,9 +49,16 @@ def_clofn(void*, milo_closure_proxy, size_t, data, (void *args[]),
 	return NULL;
 })
 
-int milo_closure(lua_State *L)
+/*
+	closure = milo.closure (
+		function,
+		type, {arg_type}
+	)
+*/
+static int milo_closure(lua_State *L)
 {
-	if (!lua_isfunction(L, 1)) return 0;
+	if (!lua_isfunction(L, 1) || !lua_istable(L, 3))
+		return 0;
 
 	milo_closure_t* cl = alloc_t(milo_closure_t);
 	cl->L = L;
@@ -57,7 +68,7 @@ int milo_closure(lua_State *L)
 	cl->type = lua_tointeger(L, 2);
 	cl->nargs = lua_rawlen(L, 3);
 
-	cl->args = alloc(sizeof(milo_closure_arg_t) * cl->nargs);
+	cl->args = alloc(sizeof(milo_arg_t) * cl->nargs);
 
 	size_t size = 0;
 
@@ -81,7 +92,7 @@ int milo_closure(lua_State *L)
 /*
 	closure(...) --> call closure function
 */
-int milo_closure_call(lua_State *L)
+static int milo_closure__call(lua_State *L)
 {
 	milo_closure_t* cl = milo_getudata(L, 1);
 
@@ -106,7 +117,7 @@ int milo_closure_call(lua_State *L)
 /*
 	#closure --> number of argument
 */
-int milo_closure_len(lua_State *L)
+static int milo_closure__len(lua_State *L)
 {
 	milo_closure_t* cl = milo_getudata(L, 1);
 	if (!cl) return 0;
@@ -118,7 +129,7 @@ int milo_closure_len(lua_State *L)
 /*
 	-closure --> pointer to closure function
 */
-int milo_closure_unm(lua_State *L)
+static int milo_closure__unm(lua_State *L)
 {
 	milo_closure_t* cl = milo_getudata(L, 1);
 	if (!cl) return 0;
@@ -127,10 +138,45 @@ int milo_closure_unm(lua_State *L)
 	return 1;
 }
 
+/*
+	closure:__tostring()
+	tostring(closure)
+	print(closure) --> closure: 0abc1234
+*/
+static int milo_closure__tostring(lua_State *L)
+{
+	milo_closure_t* cl = milo_getudata(L, 1);
+	if (!cl) return 0;
+
+	char buf[MILO_TS_LEN];
+	snprintf(buf, MILO_TS_LEN, "%s: %08x", __milo_closure__, (unsigned int)cl->addr);
+	lua_pushstring(L, buf);
+
+	return 1;
+}
+
+/*
+	auto gc
+*/
+static int milo_closure__gc(lua_State *L)
+{
+	milo_closure_t* cl = milo_getudata(L, 1);
+	if (!cl) return 0;
+
+	luaL_unref(L, LUA_REGISTRYINDEX, cl->ref);
+	free(cl->args);
+	free(cl->addr);
+	free(cl);
+
+	return 0;
+}
+
 static const luaL_Reg milo_closure_meta[] = {
-	{ "__call", milo_closure_call },
-	{ "__len", milo_closure_len },
-	{ "__unm", milo_closure_unm },
+	{ "__call", milo_closure__call },
+	{ "__len", milo_closure__len },
+	{ "__unm", milo_closure__unm },
+	{ "__tostring", milo_closure__tostring },
+	{ "__gc", milo_closure__gc },
 	{ NULL, NULL }
 };
 

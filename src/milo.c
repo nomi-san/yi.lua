@@ -1,6 +1,7 @@
 #include "milo.h"
 #include "types.h"
 #include "struct.h"
+#include <malloc.h>
 
 void* milo_newudata(lua_State* L, size_t sz)
 {
@@ -49,29 +50,36 @@ int milo_free(lua_State *L)
 /* metatable: func
 --------------------------------------------------*/
 
-int milo_func_def(lua_State *L)
+static int milo_func_def(lua_State *L)
 {
 	milo_func_t* fn = milo_getudata(L, 1);
-	fn->ret.t = lua_tointeger(L, 2);
-	fn->n = lua_rawlen(L, 3);
+	fn->type = lua_tointeger(L, 2);
+	fn->nargs = lua_rawlen(L, 3);
 
 	if (!lua_isnoneornil(L, 4)
 		|| lua_toboolean(L, 4))
 		fn->std = 1;
 
-	fn->args = alloc(sizeof(milo_value_t) * (fn->n));
+	fn->args = alloc(sizeof(milo_arg_t) * (fn->nargs));
 
-	if ((fn->n != 0) || !lua_isnoneornil(L, 3))
-		for (int i = 0; i < fn->n; i++) {
+	if ((fn->nargs != 0) || !lua_isnoneornil(L, 3))
+		for (int i = 0; i < fn->nargs; i++) {
 			lua_rawgeti(L, 3, i + 1);
-			fn->args[i].t = lua_tointeger(L, -1);
+
+			milo_type_t t = lua_tointeger(L, -1);
+			size_t sz = milo_type_tosize(t);
+
+			fn->args[i].type = t;
+			fn->args[i].offset = fn->size;
+
+			fn->size += sz;
 		}
 
 	milo_pushudata(L, fn, __milo_func__);
 	return 1;
 }
 
-int milo_func_call(lua_State *L)
+static int milo_func_call(lua_State *L)
 {
 	milo_func_t* fn = milo_getudata(L, 1);
 	if (!fn) return 0;
@@ -79,230 +87,44 @@ int milo_func_call(lua_State *L)
 	int top = lua_gettop(L);
 
 	if (top < 1) return 0;
-	if (fn->n != (top - 1))
+	if (fn->nargs != (top - 1))
 		return 0;
-	else
-		for (int i = 0; i < fn->n; i++)
-			milo_struct_setvalue(L, &fn->args[i].val, fn->args[i].t, i+2);
+	else {
+		// allocate on stack for args
+		void* args = _alloca(fn->size);
 
-	switch (fn->n) {
-		case 0: {
-			fn->ret.val = fn->std ? ((milo_fn_std_t)fn->addr)() 
-				: ((milo_fn_t)fn->addr)();
-			break;
+		for (int i = 0; i < fn->nargs; i++) {
+			void* val = milo_struct_getelement(args, fn->args[i].offset);
+			milo_struct_setvalue(
+				L,
+				val,
+				fn->args[i].type,
+				i + 2
+			);
+		}
+
+		if (fn->std) // stdcall
+			switch (fn->type) { // call function with stack                 // my idea, not bad ")
+				case c_f32: fn->ret.f32_v = ((float(__stdcall*)())fn->addr)(*(milo_not_union_t*)args); break;
+				case c_f64: // I hate float and double types
+				case c_num: fn->ret.f64_v = ((double(__stdcall*)())fn->addr)(*(milo_not_union_t*)args); break;
+				default: fn->ret = ((milo_variant_t(__stdcall*)())fn->addr)(*(milo_not_union_t*)args); break;
 			}
-		case 1: {
-			fn->ret.val = fn->std ? ((milo_fn_std_t)fn->addr)(
-				fn->args[0].val
-			) : ((milo_fn_t)fn->addr)(
-					fn->args[0].val
-				);
-			break;
-		}
-		case 2: {
-			fn->ret.val = fn->std ? ((milo_fn_std_t)fn->addr)(
-				fn->args[0].val,
-				fn->args[1].val
-			) : ((milo_fn_t)fn->addr)(
-				fn->args[0].val,
-				fn->args[1].val
-			);
-			break;
-		}
-		case 3: {
-			fn->ret.val = fn->std ? ((milo_fn_std_t)fn->addr)(
-				fn->args[0].val,
-				fn->args[1].val, fn->args[2].val
-			) : ((milo_fn_t)fn->addr)(
-				fn->args[0].val,
-				fn->args[1].val, fn->args[2].val
-			);
-			break;
-		}
-		case 4: {
-			fn->ret.val = fn->std ? ((milo_fn_std_t)fn->addr)(
-				fn->args[0].val, fn->args[1].val,
-				fn->args[2].val, fn->args[3].val
-			) : ((milo_fn_t)fn->addr)(
-				fn->args[0].val, fn->args[1].val,
-				fn->args[2].val, fn->args[3].val
-			);
-			break; 
-		}
-		case 5: {
-			fn->ret.val = fn->std ? ((milo_fn_std_t)fn->addr)(
-				fn->args[0].val, fn->args[1].val,
-				fn->args[2].val, fn->args[3].val, fn->args[4].val
-			) : ((milo_fn_t)fn->addr)(
-				fn->args[0].val, fn->args[1].val,
-				fn->args[2].val, fn->args[3].val, fn->args[4].val
-			);
-			break;
-		}
-		case 6: {
-			fn->ret.val = fn->std ? ((milo_fn_std_t)fn->addr)(
-				fn->args[0].val, fn->args[1].val,fn->args[2].val, 
-				fn->args[3].val, fn->args[4].val, fn->args[5].val
-			) : ((milo_fn_t)fn->addr)(
-				fn->args[0].val, fn->args[1].val, fn->args[2].val,
-				fn->args[3].val, fn->args[4].val, fn->args[5].val
-			);
-			break;
-		}
-		case 7: {
-			fn->ret.val = fn->std ? ((milo_fn_std_t)fn->addr)(
-				fn->args[0].val, fn->args[1].val, fn->args[2].val,
-				fn->args[3].val, fn->args[4].val, fn->args[5].val, fn->args[6].val
-			) : ((milo_fn_t)fn->addr)(
-				fn->args[0].val, fn->args[1].val, fn->args[2].val,
-				fn->args[3].val, fn->args[4].val, fn->args[5].val, fn->args[6].val
-			);
-			break;
-		}
-		case 8: {
-			fn->ret.val = fn->std ? ((milo_fn_std_t)fn->addr)(
-				fn->args[0].val, fn->args[1].val, fn->args[2].val, fn->args[3].val,
-				fn->args[4].val, fn->args[5].val, fn->args[6].val, fn->args[7].val
-			) : ((milo_fn_t)fn->addr)(
-				fn->args[0].val, fn->args[1].val, fn->args[2].val, fn->args[3].val,
-				fn->args[4].val, fn->args[5].val, fn->args[6].val, fn->args[7].val
-			);
-			break;
-		}
-		case 9: {
-			fn->ret.val = fn->std ? ((milo_fn_std_t)fn->addr)(
-				fn->args[0].val, fn->args[1].val, fn->args[2].val, fn->args[3].val,
-				fn->args[4].val, fn->args[5].val, fn->args[6].val, fn->args[7].val, fn->args[8].val
-			) : ((milo_fn_t)fn->addr)(
-				fn->args[0].val, fn->args[1].val, fn->args[2].val, fn->args[3].val,
-				fn->args[4].val, fn->args[5].val, fn->args[6].val, fn->args[7].val, fn->args[8].val
-			);
-			break;
-		}
-		case 10: {
-			fn->ret.val = fn->std ? ((milo_fn_std_t)fn->addr)(
-				fn->args[0].val, fn->args[1].val, fn->args[2].val, fn->args[3].val, fn->args[4].val,
-				fn->args[5].val, fn->args[6].val, fn->args[7].val, fn->args[8].val, fn->args[9].val
-			) : ((milo_fn_t)fn->addr)(
-				fn->args[0].val, fn->args[1].val, fn->args[2].val, fn->args[3].val, fn->args[4].val,
-				fn->args[5].val, fn->args[6].val, fn->args[7].val, fn->args[8].val, fn->args[9].val
-			);
-			break;
-		}
-		case 11: {
-			fn->ret.val = fn->std ? ((milo_fn_std_t)fn->addr)(
-				fn->args[0].val, fn->args[1].val, fn->args[2].val, fn->args[3].val, fn->args[4].val,
-				fn->args[5].val, fn->args[6].val, fn->args[7].val, fn->args[8].val, fn->args[9].val, fn->args[10].val
-			) : ((milo_fn_t)fn->addr)(
-				fn->args[0].val, fn->args[1].val, fn->args[2].val, fn->args[3].val, fn->args[4].val,
-				fn->args[5].val, fn->args[6].val, fn->args[7].val, fn->args[8].val, fn->args[9].val, fn->args[10].val
-			);
-			break;
-		}
-		case 12: {
-			fn->ret.val = fn->std ? ((milo_fn_std_t)fn->addr)(
-				fn->args[0].val, fn->args[1].val, fn->args[2].val, fn->args[3].val, fn->args[4].val, fn->args[5].val,
-				fn->args[6].val, fn->args[7].val, fn->args[8].val, fn->args[9].val, fn->args[10].val, fn->args[11].val
-			) : ((milo_fn_t)fn->addr)(
-				fn->args[0].val, fn->args[1].val, fn->args[2].val, fn->args[3].val, fn->args[4].val, fn->args[5].val,
-				fn->args[6].val, fn->args[7].val, fn->args[8].val, fn->args[9].val, fn->args[10].val, fn->args[11].val
-			);
-			break;
-		}
-		case 13: {
-			fn->ret.val = fn->std ? ((milo_fn_std_t)fn->addr)(
-				fn->args[0].val, fn->args[1].val, fn->args[2].val, fn->args[3].val, fn->args[4].val, fn->args[5].val,
-				fn->args[6].val, fn->args[7].val, fn->args[8].val, fn->args[9].val, fn->args[10].val, fn->args[11].val, fn->args[12].val
-			) : ((milo_fn_t)fn->addr)(
-				fn->args[0].val, fn->args[1].val, fn->args[2].val, fn->args[3].val, fn->args[4].val, fn->args[5].val,
-				fn->args[6].val, fn->args[7].val, fn->args[8].val, fn->args[9].val, fn->args[10].val, fn->args[11].val, fn->args[12].val
-			);
-			break;
-		}
-		case 14: {
-			fn->ret.val = fn->std ? ((milo_fn_std_t)fn->addr)(
-				fn->args[0].val, fn->args[1].val, fn->args[2].val, fn->args[3].val, fn->args[4].val, fn->args[5].val, fn->args[6].val, 
-				fn->args[7].val, fn->args[8].val, fn->args[9].val, fn->args[10].val, fn->args[11].val, fn->args[12].val, fn->args[13].val
-			) : ((milo_fn_t)fn->addr)(
-				fn->args[0].val, fn->args[1].val, fn->args[2].val, fn->args[3].val, fn->args[4].val, fn->args[5].val, fn->args[6].val,
-				fn->args[7].val, fn->args[8].val, fn->args[9].val, fn->args[10].val, fn->args[11].val, fn->args[12].val, fn->args[13].val
-			);
-			break;
-		}
-		case 15: {
-			fn->ret.val = fn->std ? ((milo_fn_std_t)fn->addr)(
-				fn->args[0].val, fn->args[1].val, fn->args[2].val, fn->args[3].val, fn->args[4].val, fn->args[5].val, fn->args[6].val,
-				fn->args[7].val, fn->args[8].val, fn->args[9].val, fn->args[10].val, fn->args[11].val, fn->args[12].val, fn->args[13].val, fn->args[14].val
-			) : ((milo_fn_t)fn->addr)(
-				fn->args[0].val, fn->args[1].val, fn->args[2].val, fn->args[3].val, fn->args[4].val, fn->args[5].val, fn->args[6].val,
-				fn->args[7].val, fn->args[8].val, fn->args[9].val, fn->args[10].val, fn->args[11].val, fn->args[12].val, fn->args[13].val, fn->args[14].val
-			);
-			break;
-		}
-		case 16: {
-			fn->ret.val = fn->std ? ((milo_fn_std_t)fn->addr)(
-				fn->args[0].val, fn->args[1].val, fn->args[2].val, fn->args[3].val, fn->args[4].val, fn->args[5].val, fn->args[6].val, fn->args[7].val,
-				fn->args[8].val, fn->args[9].val, fn->args[10].val, fn->args[11].val, fn->args[12].val, fn->args[13].val, fn->args[14].val, fn->args[15].val
-			) : ((milo_fn_t)fn->addr)(
-				fn->args[0].val, fn->args[1].val, fn->args[2].val, fn->args[3].val, fn->args[4].val, fn->args[5].val, fn->args[6].val, fn->args[7].val,
-				fn->args[8].val, fn->args[9].val, fn->args[10].val, fn->args[11].val, fn->args[12].val, fn->args[13].val, fn->args[14].val, fn->args[15].val
-			);
-			break;
-		}
-		case 17: {
-			fn->ret.val = fn->std ? ((milo_fn_std_t)fn->addr)(
-				fn->args[0].val, fn->args[1].val, fn->args[2].val, fn->args[3].val, fn->args[4].val, fn->args[5].val, fn->args[6].val, fn->args[7].val,
-				fn->args[8].val, fn->args[9].val, fn->args[10].val, fn->args[11].val, fn->args[12].val, fn->args[13].val, fn->args[14].val, fn->args[15].val,
-				fn->args[16].val
-			) : ((milo_fn_t)fn->addr)(
-				fn->args[0].val, fn->args[1].val, fn->args[2].val, fn->args[3].val, fn->args[4].val, fn->args[5].val, fn->args[6].val, fn->args[7].val,
-				fn->args[8].val, fn->args[9].val, fn->args[10].val, fn->args[11].val, fn->args[12].val, fn->args[13].val, fn->args[14].val, fn->args[15].val,
-				fn->args[16].val
-			);
-			break;
-		}
-		case 18: {
-			fn->ret.val = fn->std ? ((milo_fn_std_t)fn->addr)(
-				fn->args[0].val, fn->args[1].val, fn->args[2].val, fn->args[3].val, fn->args[4].val, fn->args[5].val, fn->args[6].val, fn->args[7].val,
-				fn->args[8].val, fn->args[9].val, fn->args[10].val, fn->args[11].val, fn->args[12].val, fn->args[13].val, fn->args[14].val, fn->args[15].val,
-				fn->args[16].val, fn->args[17].val
-			) : ((milo_fn_t)fn->addr)(
-				fn->args[0].val, fn->args[1].val, fn->args[2].val, fn->args[3].val, fn->args[4].val, fn->args[5].val, fn->args[6].val, fn->args[7].val,
-				fn->args[8].val, fn->args[9].val, fn->args[10].val, fn->args[11].val, fn->args[12].val, fn->args[13].val, fn->args[14].val, fn->args[15].val,
-				fn->args[16].val, fn->args[17].val
-			);
-			break;
-		}
-		case 19: {
-			fn->ret.val = fn->std ? ((milo_fn_std_t)fn->addr)(
-				fn->args[0].val, fn->args[1].val, fn->args[2].val, fn->args[3].val, fn->args[4].val, fn->args[5].val, fn->args[6].val, fn->args[7].val,
-				fn->args[8].val, fn->args[9].val, fn->args[10].val, fn->args[11].val, fn->args[12].val, fn->args[13].val, fn->args[14].val, fn->args[15].val,
-				fn->args[16].val, fn->args[17].val, fn->args[18].val
-			) : ((milo_fn_t)fn->addr)(
-				fn->args[0].val, fn->args[1].val, fn->args[2].val, fn->args[3].val, fn->args[4].val, fn->args[5].val, fn->args[6].val, fn->args[7].val,
-				fn->args[8].val, fn->args[9].val, fn->args[10].val, fn->args[11].val, fn->args[12].val, fn->args[13].val, fn->args[14].val, fn->args[15].val,
-				fn->args[16].val, fn->args[17].val, fn->args[18].val
-			);
-			break;
-		}
-		case 20: {
-			fn->ret.val = fn->std ? ((milo_fn_std_t)fn->addr)(
-				fn->args[0].val, fn->args[1].val, fn->args[2].val, fn->args[3].val, fn->args[4].val, fn->args[5].val, fn->args[6].val, fn->args[7].val,
-				fn->args[8].val, fn->args[9].val, fn->args[10].val, fn->args[11].val, fn->args[12].val, fn->args[13].val, fn->args[14].val, fn->args[15].val,
-				fn->args[16].val, fn->args[17].val, fn->args[18].val, fn->args[19].val
-			) : ((milo_fn_t)fn->addr)(
-				fn->args[0].val, fn->args[1].val, fn->args[2].val, fn->args[3].val, fn->args[4].val, fn->args[5].val, fn->args[6].val, fn->args[7].val,
-				fn->args[8].val, fn->args[9].val, fn->args[10].val, fn->args[11].val, fn->args[12].val, fn->args[13].val, fn->args[14].val, fn->args[15].val,
-				fn->args[16].val, fn->args[17].val, fn->args[18].val, fn->args[19].val
-			);
-			break;
-		}
+		else
+			switch(fn->type) {
+				case c_f32: fn->ret.f32_v = ((float(*)())fn->addr)(*(milo_not_union_t*)args); break;
+				case c_f64:
+				case c_num: fn->ret.f64_v = ((double(*)())fn->addr)(*(milo_not_union_t*)args); break;
+				default: fn->ret = ((milo_variant_t(*)())fn->addr)(*(milo_not_union_t*)args); break;
+			}
+
+		return milo_pushvariant(L, fn->ret, fn->type);
 	}
 
-	return milo_struct_pushvalue(L, &fn->ret.val, fn->ret.t);
+	return 0;
 }
 
-int milo_func_index(lua_State *L)
+static int milo_func_index(lua_State *L)
 {
 	milo_func_t* fn = milo_getudata(L, 1);
 	const char* id = lua_tostring(L, 2);
@@ -337,7 +159,7 @@ void milo_func_reg(lua_State *L)
 /* .load
 --------------------------------------------------*/
 
-int milo_load(lua_State *L)
+static int milo_load(lua_State *L)
 {
 	milo_lib_t* lib = alloc_t(milo_lib_t);
 	const char* name = lua_tostring(L, 1);
@@ -356,7 +178,7 @@ int milo_load(lua_State *L)
 /* metatable: lib
 --------------------------------------------------*/
 
-int milo_lib_index(lua_State *L)
+static int milo_lib_index(lua_State *L)
 {
 	milo_lib_t* lib = milo_getudata(L, 1);
 	const char* id = lua_tostring(L, 2);
@@ -446,8 +268,6 @@ int luaopen_milo(lua_State *L)
 	
 	lua_pushcfunction(L, milo_ct);
 	lua_setfield(L, -2, "ct");
-
-	int milo_test(lua_State *L);
 
 	lua_createtable(L, 0, 0);
 

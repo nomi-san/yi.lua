@@ -166,8 +166,11 @@ int milo_struct(lua_State *L)
 	struct[n] --> element n (n > 0, n <= #struct)
 
 	-- for sugar syntax
-
 	struct.name --> name is string of element's name
+
+	-- pointer
+	struct[-n] --> address of element n
+	struct[-1] == (-struct) --> true
 */
 int milo_struct_index(lua_State *L)
 {
@@ -175,6 +178,8 @@ int milo_struct_index(lua_State *L)
 
 	if (lua_isinteger(L, 2)) {
 		int idx = lua_tointeger(L, 2);
+
+		if (abs(idx) > st->len) return 0;
 
 		switch (idx) {
 			case -1: {
@@ -186,7 +191,12 @@ int milo_struct_index(lua_State *L)
 				return 1;
 			}
 			default: {
-				if (idx > st->len) return 0;
+				if (idx < 0) {
+					idx = abs(idx);
+					void* addr = milo_struct_getelement(st->addr, st->els[idx - 1].offset);
+					lua_pushlightuserdata(L, addr);
+					return 1;
+				}
 
 				void* val = milo_struct_getelement(
 					st->addr,
@@ -207,6 +217,7 @@ int milo_struct_index(lua_State *L)
 			st->addr,
 			st->els[i].offset
 		);
+
 		return milo_struct_pushvalue(L, val, st->els[i].type);
 	}
 
@@ -256,7 +267,7 @@ int milo_struct_newindex(lua_State *L)
 /* 
 	#struct --> count of element
 */
-int milo_struct_len(lua_State *L)
+static int milo_struct_len(lua_State *L)
 {
 	milo_struct_t* st = milo_getudata(L, 1);
 	if (!st) return 0;
@@ -268,7 +279,7 @@ int milo_struct_len(lua_State *L)
 /*
 	-struct --> pointer address of struct (as lightudata)
 */
-int milo_struct_unm(lua_State *L)
+static int milo_struct_unm(lua_State *L)
 {
 	milo_struct_t* st = milo_getudata(L, 1);
 	if (!st) return 0;
@@ -281,7 +292,7 @@ int milo_struct_unm(lua_State *L)
 	struct {value_e1, value_e2, ..., value_en}
 		--> set value (n <= #struct)
 */
-int milo_struct_call(lua_State *L)
+static int milo_struct_call(lua_State *L)
 {
 	milo_struct_t* st = milo_getudata(L, 1);
 	if (!st) return 0;
@@ -308,7 +319,7 @@ int milo_struct_call(lua_State *L)
 	print(struct)
 		--> struct: 0123abcd
 */
-int milo_struct_tostring(lua_State *L)
+static int milo_struct_tostring(lua_State *L)
 {
 	milo_struct_t* st = milo_getudata(L, 1);
 	if (!st) return 0;
@@ -320,6 +331,19 @@ int milo_struct_tostring(lua_State *L)
 	return 1;
 }
 
+static int milo_struct_gc(lua_State *L)
+{
+	milo_struct_t* st = milo_getudata(L, 1);
+	if (!st) return 0;
+
+	if (st->ref) luaL_unref(L, LUA_REGISTRYINDEX, st->ref);
+	free(st->addr);
+	free(st->els);
+	free(st);
+
+	return 0;
+}
+
 static const luaL_Reg milo_struct_meta[] = {
 	{ "__len", milo_struct_len },
 	{ "__unm", milo_struct_unm },
@@ -327,6 +351,7 @@ static const luaL_Reg milo_struct_meta[] = {
 	{ "__tostring", milo_struct_tostring },
 	{ "__index", milo_struct_index },
 	{ "__newindex", milo_struct_newindex },
+	{ "__gc", milo_struct_gc },
 	{ NULL, NULL }
 };
 
@@ -339,3 +364,4 @@ void milo_struct_reg(lua_State *L)
 	lua_pushcfunction(L, milo_struct);
 	lua_setfield(L, -2, "struct");
 }
+

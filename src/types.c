@@ -1,4 +1,5 @@
 #include "types.h"
+#include "lauxlib.h"
 
 const char* milo_type_tostring(milo_type_t type)
 {
@@ -57,4 +58,43 @@ size_t milo_type_tosize(milo_type_t type)
 		case c_ptr:		return sizeof(c_ptr_t);
 	}
 	return 0;
+}
+
+int milo_pushvariant(lua_State *L, milo_variant_t val, milo_type_t type)
+{
+	switch (type) 
+	{
+		case c_bool: 	lua_pushboolean(L, val.bool_v);	break;
+
+		case c_u8: 		lua_pushinteger(L, val.u8_v);		break;
+		case c_u16: 	lua_pushinteger(L, val.u16_v);		break;
+		case c_u32: 	lua_pushboolean(L, val.u32_v);		break;
+		case c_u64: 	lua_pushboolean(L, val.u64_v);		break;
+
+		case c_uint: 	lua_pushinteger(L, val.u32_v);		break;
+		case c_uint64:	lua_pushinteger(L, val.u64_v);		break;
+
+		case c_i8: 		lua_pushinteger(L, val.i8_v);		break;
+		case c_i16: 	lua_pushinteger(L, val.i16_v);		break;
+		case c_i32: 	lua_pushinteger(L, val.i32_v);		break;
+		case c_i64: 	lua_pushinteger(L, val.i64_v);		break;
+
+		case c_int: 	lua_pushinteger(L, val.int_v);		break;
+		case c_int64: 	lua_pushinteger(L, val.int64_v);	break;
+
+		case c_f32: 	lua_pushnumber(L, val.f32_v);		break;
+		case c_f64: 	lua_pushnumber(L, val.f64_v);		break;
+		case c_num: 	lua_pushnumber(L, val.num_v);		break;
+	
+		case c_str: 	lua_pushstring(L, val.str_v);			break;
+		case c_wstr: 	lua_pushwstring(L, val.wstr_v);			break;
+		case c_ptr:		lua_pushlightuserdata(L, val.ptr_v);	break;
+
+		//case c_char: 	lua_pushinteger(L, *(c_char_t*)val);	break;
+		//case c_wchar: 	lua_pushinteger(L, *(c_wchar_t*)val);	break;
+
+		default: return 0;
+	}
+
+	return 1;
 }
