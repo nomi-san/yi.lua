@@ -8,7 +8,7 @@
 </p>
 
 ### About
-- Milö (Milô) is a my dog's name, it was died in five years ago. Its soul always arrive in my code.
+- Milö (Milô) is a my dog's name, it died in five years ago. Its soul always arrive in my code.
 - Written in C about over 1.3k sloc.
 - Easy to use.
 - High performance.
