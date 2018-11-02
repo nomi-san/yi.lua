@@ -25,7 +25,9 @@
 ### Build
 
 ```bash
-$ gcc -shared -w -o milo.dll src/*.c -Iuser/lua/src -Luser/lua -llua53
+$ git clone https://github.com/wy3/milo.git
+$ cd milo
+$ gcc -shared -w -o milo.dll ./src/*.c -Iuser/lua/src -Luser/lua -llua53
 ```
 
 - When build with **MSVC**, please disable **SDL Check** (or arg **/sld-**); if not closure argument being crash after first.
