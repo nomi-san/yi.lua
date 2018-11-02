@@ -11,9 +11,9 @@
 - Easy to use
 - High performance
 - [x] Multiple static types
-- [x] Calling C shared function
-- [x] Structure
-- [x] Closures
+- [x] Calling C shared function (1st day)
+- [x] Structure (2nd day)
+- [x] Closures (3rd day)
 - [x] Auto GC
 - [ ] Classes
 - [ ] Memory management
