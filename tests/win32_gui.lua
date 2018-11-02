@@ -15,6 +15,7 @@ GetMessage          = user32.GetMessageA:def(t.bool, {t.ptr, t.ptr, t.int, t.int
 TranslateMessage    = user32.TranslateMessage:def(t.int, {t.ptr}, true)
 DispatchMessage     = user32.DispatchMessageA:def(t.int, {t.ptr}, true)
 MoveWindow          = user32.MoveWindow:def(t.int, {t.ptr, t.int, t.int, t.int, t.int, t.bool}, true)
+PostQuitMessage     = user32.PostQuitMessage:def(t.none, {t.int}, true)
 
 -- WNDCLASSEX
 wcex = struct {
@@ -38,7 +39,7 @@ msg = -struct { t.ptr, t.uint, t.uint, t.uint, t.uint, t.int, t.int, t.uint }
 wndproc = closure (
     function(hwnd, msg, wp, lp)
         if (msg == 0x0010) then
-            os.exit()
+            PostQuitMessage(0)
         end
         -- define for window message
         return DefWindowProc(hwnd, msg, wp, lp)
