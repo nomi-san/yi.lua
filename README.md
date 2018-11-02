@@ -7,9 +7,13 @@
     <br>
 </p>
 
+### About
+- Milö (Milô) is a my dog's name, it was died in five years ago. Its soul always arrive in my code.
+- Written in C about over 1.3k sloc.
+- Easy to use.
+- High performance.
+
 ### Features
-- Easy to use
-- High performance
 - [x] Multiple static types
 - [x] Calling C shared function (1st day)
 - [x] Structure (2nd day)
