@@ -14,9 +14,9 @@
 - [x] Calling C shared function
 - [x] Structure
 - [x] Closures
+- [x] Auto GC
 - [ ] Classes
 - [ ] Memory management
-- [ ] Auto GC
 
 ### OS Supported
 - [x] Windows
@@ -46,7 +46,7 @@ ret = ((void*(*)())func_addr)(*(struct_not_union_t*)args);
 *(double*)&ret = ((void*(*)())func_addr)(*(struct_not_union_t*)args); // double
 ```
 
-> `struct_not_union_t` like variant union, but it's pure struct, see [`milo_not_union_t`](https://github.com/wy3/milo/blob/master/src/types.h#L57)
+> `struct_not_union_t` like variant union, but it's pure struct, see [`milo_not_union_t`](https://github.com/wy3/milo/blob/master/src/types.h#L57).
 
 - Closure proxy:
 
@@ -56,6 +56,8 @@ void* __proxy__(void* args) {
     // param[n] := args + sizeof(param[n-1])
 }
 ```
+
+- Struct array: like args of calling function.
 
 ## Example 
 
@@ -147,7 +149,3 @@ print(-add_c) --> closure function address pointer, use for C closure/callback
 `ptr`| pointer
 `f32`, `f64` (`num`)| floating number
 `str`, `wstr`| string, unicode string
-
-
-
-
