@@ -50,7 +50,7 @@ int milo_free(lua_State *L)
 /* metatable: func
 --------------------------------------------------*/
 
-static int milo_func_def(lua_State *L)
+static int milo_func__def(lua_State *L)
 {
 	milo_func_t* fn = milo_getudata(L, 1);
 	fn->type = lua_tointeger(L, 2);
@@ -60,6 +60,7 @@ static int milo_func_def(lua_State *L)
 		|| lua_toboolean(L, 4))
 		fn->std = 1;
 
+	fn->ret = alloc(milo_type_tosize(fn->type));
 	fn->args = alloc(sizeof(milo_arg_t) * (fn->nargs));
 
 	if ((fn->nargs != 0) || !lua_isnoneornil(L, 3))
@@ -79,7 +80,7 @@ static int milo_func_def(lua_State *L)
 	return 1;
 }
 
-static int milo_func_call(lua_State *L)
+static int milo_func__call(lua_State *L)
 {
 	milo_func_t* fn = milo_getudata(L, 1);
 	if (!fn) return 0;
@@ -105,26 +106,34 @@ static int milo_func_call(lua_State *L)
 
 		if (fn->std) // stdcall
 			switch (fn->type) { // call function with stack                 // my idea, not bad ")
-				case c_f32: fn->ret.f32_v = ((float(__stdcall*)())fn->addr)(*(milo_not_union_t*)args); break;
+				case c_f32: *(float*)&fn->ret = ((float(__stdcall*)())fn->addr)(*(milo_not_union_t*)args); break;
 				case c_f64: // I hate float and double types
-				case c_num: fn->ret.f64_v = ((double(__stdcall*)())fn->addr)(*(milo_not_union_t*)args); break;
-				default: fn->ret = ((milo_variant_t(__stdcall*)())fn->addr)(*(milo_not_union_t*)args); break;
+				case c_num: *(double*)&fn->ret = ((double(__stdcall*)())fn->addr)(*(milo_not_union_t*)args); break;
+				case c_i64:
+				case c_int64: *(long long*)&fn->ret = ((long long(__stdcall*)())fn->addr)(*(milo_not_union_t*)args); break;
+				case c_u64:
+				case c_uint64: *(unsigned long long*)&fn->ret = ((unsigned long long(__stdcall*)())fn->addr)(*(milo_not_union_t*)args); break;
+				default: *(void**)&fn->ret = ((void*(__stdcall*)())fn->addr)(*(milo_not_union_t*)args); break;
 			}
 		else
 			switch(fn->type) {
-				case c_f32: fn->ret.f32_v = ((float(*)())fn->addr)(*(milo_not_union_t*)args); break;
-				case c_f64:
-				case c_num: fn->ret.f64_v = ((double(*)())fn->addr)(*(milo_not_union_t*)args); break;
-				default: fn->ret = ((milo_variant_t(*)())fn->addr)(*(milo_not_union_t*)args); break;
+				case c_f32: *(float*)&fn->ret = ((float(*)())fn->addr)(*(milo_not_union_t*)args); break;
+				case c_f64: // I hate float and double types
+				case c_num: *(double*)&fn->ret = ((double(*)())fn->addr)(*(milo_not_union_t*)args); break;
+				case c_i64:
+				case c_int64: *(long long*)&fn->ret = ((long long(*)())fn->addr)(*(milo_not_union_t*)args); break;
+				case c_u64:
+				case c_uint64: *(unsigned long long*)&fn->ret = ((unsigned long long(*)())fn->addr)(*(milo_not_union_t*)args); break;
+				default: *(void**)&fn->ret = ((void*(*)())fn->addr)(*(milo_not_union_t*)args); break;
 			}
 
-		return milo_pushvariant(L, fn->ret, fn->type);
+		return milo_struct_pushvalue(L, &fn->ret, fn->type);
 	}
 
 	return 0;
 }
 
-static int milo_func_index(lua_State *L)
+static int milo_func__index(lua_State *L)
 {
 	milo_func_t* fn = milo_getudata(L, 1);
 	const char* id = lua_tostring(L, 2);
@@ -136,22 +145,36 @@ static int milo_func_index(lua_State *L)
 		lua_pushlightuserdata(L, fn->addr);
 
 	else if (!strcmp(id, "def"))
-		lua_pushcfunction(L, milo_func_def);
+		lua_pushcfunction(L, milo_func__def);
 
 	else return 0;
 
 	return 1;
 }
 
+static int milo_func__gc(lua_State *L)
+{
+	milo_func_t* fn = milo_getudata(L, 1);
+	if (!fn) return 0;
+
+	free(fn->ret);
+	free(fn->args);
+	free(fn->name);
+	free(fn);
+
+	return 0;
+}
+
 static const luaL_Reg milo_func_meta[] = {
-	{ "__call", milo_func_call },
-	{ "__index", milo_func_index },
+	{ "__call", milo_func__call },
+	{ "__index", milo_func__index },
+	{ "__gc", milo_func__gc },
 	{ NULL, NULL}
 };
 
 void milo_func_reg(lua_State *L)
 {
-	luaL_newmetatable(L, "func");
+	luaL_newmetatable(L, __milo_func__);
 	luaL_setfuncs(L, milo_func_meta, 0);
 	lua_pop(L, 1);
 }
@@ -178,7 +201,7 @@ static int milo_load(lua_State *L)
 /* metatable: lib
 --------------------------------------------------*/
 
-static int milo_lib_index(lua_State *L)
+static int milo_lib__index(lua_State *L)
 {
 	milo_lib_t* lib = milo_getudata(L, 1);
 	const char* id = lua_tostring(L, 2);
@@ -194,7 +217,7 @@ static int milo_lib_index(lua_State *L)
 		if (!addr) return 0;
 
 		milo_func_t* fn = alloc_t(milo_func_t);
-
+		
 		fn->name = _strdup(id);
 		fn->addr = addr;
 
@@ -205,8 +228,21 @@ static int milo_lib_index(lua_State *L)
 	return 1;
 }
 
+static int milo_lib__gc(lua_State *L)
+{
+	milo_lib_t* lib = milo_getudata(L, 1);
+	if (!lib) return 0;
+
+	FreeLibrary(lib->addr);
+	free(lib->name);
+	free(lib);
+
+	return 0;
+}
+
 static const luaL_Reg milo_lib_meta[] = {
-	{ "__index", milo_lib_index },
+	{ "__index", milo_lib__index },
+	{ "__gc", milo_lib__gc },
 	{ NULL, NULL}
 };
 

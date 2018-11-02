@@ -109,7 +109,7 @@ typedef struct {
 	
 	milo_type_t type;
 
-	milo_variant_t	ret;
+	void*	ret;
 
 	milo_arg_t	*args;
 	size_t size;
