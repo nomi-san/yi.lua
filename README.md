@@ -22,36 +22,38 @@
 - [x] Windows
 - [ ] Linux
 
-### Bugs
-- `double` cannot cast to `void*` (x86 arch) or another `4bytes-type` :))
+### Build
 
-```c
-double value = 4578.1415;
-```
-
-```
-<---------------------------- 64bits ---------------------------->
-|================ 53bits for integer ===============/== digits ==|
-|                       4578     |                  |    1415    |
-|================================|\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\|
-<----------- 32bits ------------->
+```bash
+$ gcc -shared -w -o milo.dll src/*.c -Iuser/lua/src -Luser/lua -llua53
 ```
 
 - When build with **MSVC**, please disable **SDL Check** (or arg **/sld-**); if not closure argument being crash after first.
 
 <img src="https://i.imgur.com/zb2ogcQ.png">
 
-- My way for closure proxy (unsafe):
+### My technology
+
+- Calling function:
+
+```c
+void* ret = alloc_heap(size_of_ret_type);
+void* args = alloc_stack(sizeof_args_type);
+// args + 0 := param[1]
+// args + sizeof(param[to n])) := param[n]
+
+ret = ((void*(*)())func_addr)(*(struct_not_union_t*)args);
+*(double*)&ret = ((void*(*)())func_addr)(*(struct_not_union_t*)args); // double
+```
+
+> `struct_not_union_t` like variant union, but it's pure struct, see [`milo_not_union_t`](https://github.com/wy3/milo/blob/master/src/types.h#L57)
+
+- Closure proxy:
 
 ```c
 void* __proxy__(void* args) {
-    // param[1] = args + 0
-    // param[n] = args + sizeof(param[n-1])
-}
-
-// instead of
-void* __proxy__(void* param1, void* param_2, ...) {
-    //
+    // param[1] := args + 0
+    // param[n] := args + sizeof(param[n-1])
 }
 ```
 
