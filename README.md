@@ -4,6 +4,7 @@
     </p>
     <h1 align="center">C library for Lua</h1>
     <h3 align="center">"LibFFI is awesome, but I don't like it."</h3>
+    <p align="center"><a href="https://travis-ci.org/wy3/milo" target="_blank"><img src="https://travis-ci.org/wy3/milo.svg?branch=master"></a></p>
     <br>
 </p>
 
