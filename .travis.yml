@@ -1,0 +1,18 @@
+matrix:
+  include:
+    - os: linux
+      addons:
+        apt:
+          packages:
+            - g++-4.9
+      env:
+         - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
+         
+script:
+    - cd src
+    
+language:
+    - c
+
+before_install:
+    - eval "${MATRIX_EVAL}"
