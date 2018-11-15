@@ -19,6 +19,7 @@
 - [x] Structure (2nd day)
 - [x] Closures (3rd day)
 - [x] Auto GC
+- [ ] Enum
 - [ ] Classes
 - [ ] Memory management
 
