@@ -19,13 +19,15 @@
 
 ### Features
 - [x] Multiple static types
-- [x] Calling C shared function (1st day)
-- [x] Structure (2nd day)
-- [x] Closures (3rd day)
 - [x] Auto GC
 - [x] Enum
 - [ ] Classes
 - [ ] Memory management
+
+My challenge:
+- [x] Calling C shared function (1st day)
+- [x] Structure (2nd day)
+- [x] Closures (3rd day)
 
 ### OS Supported
 - [x] Windows
