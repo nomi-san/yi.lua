@@ -1,20 +1,15 @@
-matrix:
-  include:
-    - os: linux
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - g++-4.9
-      env:
-         - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
-         
-script:
-    - cd src
-    
-language:
-    - c
+os: windows
+language: c
 
-before_install:
-    - eval "${MATRIX_EVAL}"
+script:
+  - git clone https://github.com/small-lua/milo.git
+  - cd milo
+  - choco feature enable -n=allowGlobalConfirmation
+  - choco install make
+  - choco install curl
+  - choco install 7zip
+  - curl https://www.lua.org/ftp/lua-5.3.5.tar.gz --output lua.tar.gz
+  - 7z -y x lua.tar.gz
+  - 7z -y x lua.tar
+  - mv lua-5.3.5 lua53 && cd lua53 && make mingw && cd ..
+  
