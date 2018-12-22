@@ -12,4 +12,4 @@ script:
   - 7z -y x lua.tar.gz
   - 7z -y x lua.tar
   - mv lua-5.3.5 lua53 && cd lua53 && make mingw && cd ..
-  
+  - gcc -shared -w -o milo.dll -I./lua53/src ./src/*.c -L./lua53/src -llua
