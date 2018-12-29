@@ -61,6 +61,13 @@ ret = ((void*(*)())func_addr)(*(struct_not_union_t*)args);
 
 > `struct_not_union_t` like variant union, but it's pure struct, see [`milo_not_union_t`](https://github.com/wy3/milo/blob/master/src/types.h#L57).
 
+- Return of unsafe calling:
+
+```c
+union::<[ 8 bytes ]> ret;
+(&ret) -> ptr <cast_to_typeof_value> := value;
+```
+
 - Closure proxy:
 
 ```c
