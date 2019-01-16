@@ -12,8 +12,5 @@ script:
   - 7z -y x lua.tar.gz
   - 7z -y x lua.tar
   - mv lua-5.3.4 lua53 && cd lua53 && make mingw && cd ..
-  - curl http://download.savannah.gnu.org/releases/tinycc/tcc-0.9.27-win64-bin.zip --output tcc-win64.zip
-  - 7z e tcc-win64.zip -y
   - mkdir release
-  - tcc/tcc.exe -impdef lua53/src/lua53.dll -o release/lua53.def
-  - tcc/tcc.exe -shared -o release/yi.dll -w -I./lua53/src ./src/*.c ./release/lua53.def
+  - i686-w64-mingw32-gcc-8.1.0 -shared -w -o release/yi.dll -I./lua53/src -DWIN32 -I__i686__ ./src/*.c -L./lua53/src -llua53
