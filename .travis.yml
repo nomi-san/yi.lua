@@ -5,9 +5,9 @@ script:
   - git clone https://github.com/wy3/yi.lua.git
   - cd yi.lua
   - choco feature enable -n=allowGlobalConfirmation
-  - choco install make curl 7zip tinycc
+  - choco install make curl 7zip
   - curl https://www.lua.org/ftp/lua-5.3.4.tar.gz --output lua.tar.gz
   - 7z -y x lua.tar.gz && 7z -y x lua.tar
   - mv lua-5.3.4 lua53 && cd lua53 && make mingw && cd ..
   - mkdir release
-  - tcc -shared -o release/yi.dll -w -I./lua53/src ./src/*.c ./lua53/src/lua53.dll
+  - i686-w64-mingw32-gcc -shared -w -o release/yi.dll -I./lua53/src -DWIN32 -I__i686__ ./src/*.c -L./lua53/src -llua53
