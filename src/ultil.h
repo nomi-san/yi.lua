@@ -30,7 +30,7 @@ extern "C" {
 
 #if defined(_M_AMD64) || defined(_M_X64) || defined(__x86_64__) || defined(__x86_64)
 #if defined(__GNUC__)
-#pragma GCC error "GNU compiler for Windows 64bit (x86_64) is not supported!"
+//#pragma GCC error "GNU compiler for Windows 64bit (x86_64) is not supported!"
 #endif
 #define yi_X64 1
 #elif defined(_M_I86) || defined(_M_IX86) || defined(__i386__) || defined (__i386)
