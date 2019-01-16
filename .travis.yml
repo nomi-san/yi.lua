@@ -14,3 +14,4 @@ script:
   - rm *.obj && cd ../../../release
   - cl /MP /GS- /GL /analyze- /W2 /I"../vendor/lua534/src" /c /D "WIN32" /D "UNICODE" /MT /Gd /Oy /Oi /Fa "./build/"
   - link /OUT:yi.dll ./lua53.lib
+  - MSBuild
