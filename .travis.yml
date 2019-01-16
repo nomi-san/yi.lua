@@ -2,14 +2,15 @@ os: windows
 language: c
 
 script:
-  - git clone https://github.com/small-lua/milo.git
-  - cd milo
-  - choco feature enable -n=allowGlobalConfirmation
-  - choco install make
-  - choco install curl
-  - choco install 7zip
-  - curl https://www.lua.org/ftp/lua-5.3.5.tar.gz --output lua.tar.gz
-  - 7z -y x lua.tar.gz
-  - 7z -y x lua.tar
-  - mv lua-5.3.5 lua53 && cd lua53 && make mingw && cd ..
-  - gcc -shared -w -o milo.dll -I./lua53/src ./src/*.c -L./lua53/src -llua
+  - git clone https://github.com/wy3/yi.lua.git
+  - cd yi.lua
+  - mkdir release && mkdir release/build
+  - cd vendor/lua534/src
+  - cl /MT /O2 /c /DLUA_BUILD_AS_DLL *.c
+  - ren lua.obj lua.o
+  - ren luac.obj luac.o
+  - link /DLL /IMPLIB:../../../release/lua53.lib /OUT:../../../release/lua53.dll *.obj 
+  - link /OUT:../../../release/lua.exe lua.o ../../../release/lua5.3.0.lib
+  - rm *.obj && cd ../../../release
+  - cl /MP /GS- /GL /analyze- /W2 /I"../vendor/lua534/src" /c /D "WIN32" /D "UNICODE" /MT /Gd /Oy /Oi /Fa "./build/"
+  - link /OUT:yi.dll ./lua53.lib
