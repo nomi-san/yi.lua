@@ -10,4 +10,4 @@ script:
   - 7z -y x lua.tar.gz && 7z -y x lua.tar
   - mv lua-5.3.4 lua53 && cd lua53 && make mingw && cd ..
   - mkdir release
-  - i686-w64-mingw32-gcc -shared -w -o release/yi.dll -I./lua53/src -DWIN32 -I__i686__ ./src/*.c -L./lua53/src -llua53
+  - gcc -shared -w -o release/yi.dll -I./lua53/src -DWIN32 -I__i686__ ./src/*.c -L./lua53/src -llua53
