@@ -10,5 +10,4 @@ script:
   - 7z -y x lua.tar.gz && 7z -y x lua.tar
   - mv lua-5.3.4 lua53 && cd lua53 && make mingw && cd ..
   - mkdir release
-  - tinycc -impdef lua53/src/lua53.dll -o release/lua53.def
-  - tinycc -shared -o release/yi.dll -w -I./lua53/src ./src/*.c ./release/lua53.def
+  - tcc -shared -o release/yi.dll -w -I./lua53/src ./src/*.c ./lua53/src/lua53.dll
