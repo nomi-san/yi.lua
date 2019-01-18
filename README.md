@@ -1,5 +1,5 @@
 # yi.lua
-Yi - C library for Lua
+Yi - C interface library for Lua
 
 ### Features
 - [x] Multi-threading
